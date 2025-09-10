@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Hub</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif; /* Changed font */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1a1a2e; /* Darker background */
+            color: #e94560; /* Accent color for text */
+            overflow: hidden; /* Prevent scrolling due to game elements */
+            touch-action: manipulation; /* Prevent default touch behaviors */
+        }
+
+        #loading-screen {
+            text-align: center;
+            color: #0f3460; /* Dark blue text */
+        }
+
+        #loading-screen h1 {
+            font-size: 2.5em; /* Larger heading */
+            margin-bottom: 20px;
+        }
+
+        .loading-logo {
+            font-size: 1.5em; /* Adjusted size */
+            margin-top: 20px;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from {
+                transform: scale(1);
+                opacity: 1;
+            }
+            to {
+                transform: scale(1.1);
+                opacity: 0.7; /* Adjusted opacity */
+            }
+        }
+
+        #game-menu {
+            display: none;
+            text-align: center;
+            padding: 30px; /* Increased padding */
+            background-color: #0f3460; /* Dark blue background */
+            border-radius: 10px; /* More rounded corners */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); /* Stronger shadow */
+            max-width: 400px; /* Max width for menu */
+            width: 90%; /* Responsive width */
+            color: #e94560; /* Accent color */
+        }
+
+        #game-menu h2 {
+            margin-top: 0;
+            color: #e94560; /* Accent color */
+            font-size: 2em; /* Larger heading */
+            margin-bottom: 25px;
+        }
+
+        #game-menu button {
+            display: block;
+            width: 100%;
+            padding: 18px; /* Increased padding for larger touch target */
+            margin-bottom: 12px; /* Increased margin */
+            font-size: 1.2em; /* Larger font size */
+            cursor: pointer;
+            border: none;
+            border-radius: 8px; /* More rounded buttons */
+            background-color: #e94560; /* Accent color background */
+            color: white;
+            transition: background-color 0.3s ease, transform 0.1s ease; /* Added transform transition */
+        }
+
+        #game-menu button:hover {
+            background-color: #ba364d; /* Darker accent on hover */
+        }
+
+        #game-menu button:active {
+             transform: scale(0.98); /* Slight press effect */
+        }
+
+
+        #game-area {
+            display: none;
+            text-align: center;
+            position: relative; /* Needed for absolute positioning of game elements */
+            width: 100%;
+            height: 100vh; /* Take full viewport height */
+            touch-action: manipulation; /* Prevent default touch behaviors for the game area */
+            background-color: #1a1a2e; /* Consistent background */
+            color: #e94560; /* Consistent color */
+        }
+
+        /* Common styling for game containers */
+        #tic-tac-toe-game, #maze-game, #guess-number-game, #rock-paper-scissors-game {
+             display: none; /* Initially hidden */
+             margin-top: 0; /* Remove default margin-top */
+             padding: 20px; /* Add padding */
+             background-color: #0f3460; /* Dark blue background */
+             border-radius: 10px; /* Consistent rounded corners */
+             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); /* Stronger shadow */
+             max-width: 90%; /* Responsive max width */
+             margin-left: auto; /* Center block elements */
+             margin-right: auto; /* Center block elements */
+             box-sizing: border-box; /* Include padding in width */
+             height: calc(100vh - 40px); /* Adjust height to fit viewport with padding */
+             overflow-y: auto; /* Add scroll if content exceeds height */
+             display: flex; /* Use flexbox for layout */
+             flex-direction: column; /* Stack elements vertically */
+             justify-content: space-between; /* Space out content and button */
+             align-items: center; /* Center items horizontally */
+        }
+
+        /* Specific adjustments for games */
+        #tic-tac-toe-game {
+             max-width: 300px; /* Smaller max width for Tic Tac Toe */
+        }
+
+        #maze-game {
+             max-width: fit-content; /* Adjust to maze size */
+        }
+
+        #guess-number-game, #rock-paper-scissors-game { /* Styling for new games */
+             max-width: 500px; /* Wider for quiz and scramble */
+        }
+
+
+        /* Tic Tac Toe Specific Styles */
+        #tic-tac-toe-game .board {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            grid-gap: 8px; /* Increased gap */
+            margin: 20px auto;
+            border: 3px solid #e94560; /* Accent border */
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        #tic-tac-toe-game .cell {
+            width: 80px;
+            height: 80px;
+            background-color: #e94560; /* Accent background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3em; /* Larger font for X/O */
+            cursor: pointer;
+            border: none; /* Removed cell border */
+            color: #1a1a2e; /* Dark text color */
+            transition: background-color 0.2s ease;
+            min-width: 60px; /* Ensure minimum touch size */
+            min-height: 60px; /* Ensure minimum touch size */
+        }
+
+        #tic-tac-toe-game .cell:hover {
+            background-color: #ba364d; /* Darker accent on hover */
+        }
+
+         #tic-tac-toe-game .cell:active {
+             transform: scale(0.95); /* Slight press effect */
+         }
+
+        #tic-tac-toe-game #game-status {
+            margin-top: 15px;
+            font-size: 1.5em;
+            color: #e94560; /* Accent color */
+        }
+
+        #tic-tac-toe-game #reset-button {
+            margin-top: 25px;
+            padding: 15px 25px; /* Increased padding */
+            font-size: 1.1em;
+            cursor: pointer;
+            background-color: #e94560; /* Accent color */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+         #tic-tac-toe-game #reset-button:hover {
+            background-color: #ba364d; /* Darker accent on hover */
+        }
+
+         #tic-tac-toe-game #reset-button:active {
+             transform: scale(0.98); /* Slight press effect */
+         }
+
+        /* Maze Specific Styles */
+        #maze-game .maze-container {
+            display: inline-grid;
+            grid-template-columns: repeat(auto-fit, minmax(30px, 1fr));
+            grid-gap: 0;
+            border: 3px solid #e94560; /* Accent border */
+            margin: 20px auto;
+        }
+        #maze-game .maze-cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #0f3460; /* Border matching background */
+            box-sizing: border-box;
+            min-width: 40px; /* Ensure minimum touch size for maze cells */
+            min-height: 40px; /* Ensure minimum touch size for maze cells */
+        }
+        #maze-game .wall {
+            background-color: #333; /* Dark wall */
+        }
+        #maze-game .path {
+            background-color: #1a1a2e; /* Dark path */
+        }
+        #maze-game .player {
+            background-color: #4CAF50; /* Green player */
+            border-radius: 50%; /* Circular player */
+        }
+        #maze-game .exit {
+            background-color: #FFC107; /* Amber exit */
+        }
+
+
+        #maze-game #maze-status {
+            margin-top: 15px;
+            font-size: 1.5em;
+            color: #e94560; /* Accent color */
+        }
+
+
+        /* Guess Number Game Specific Styles */
+        #guess-number-game {
+            padding: 30px;
+            justify-content: center; /* Center content vertically */
+        }
+
+        #guess-number-game h3 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #e94560; /* Accent color */
+        }
+
+        #guess-number-game p {
+             font-size: 1.2em;
+             margin-bottom: 15px;
+             color: white;
+        }
+
+        #guess-number-game input[type="number"] {
+            padding: 10px;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            border: 2px solid #e94560; /* Accent border */
+            border-radius: 5px;
+            text-align: center;
+            background-color: #0f3460; /* Dark background */
+            color: white; /* White text */
+            outline: none; /* Remove default outline */
+        }
+
+         #guess-number-game input[type="number"]:focus {
+             border-color: #ba364d; /* Darker accent on focus */
+         }
+
+        #guess-number-game button#submit-guess {
+            padding: 15px 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            background-color: #e94560; /* Accent color */
+            color: white;
+            border: none;
+            border-radius: 8px;
+             transition: background-color 0.3s ease, transform 0.1s ease;
+             margin-bottom: 20px; /* Space before status */
+        }
+
+         #guess-number-game button#submit-guess:hover {
+             background-color: #ba364d; /* Darker accent on hover */
+         }
+
+          #guess-number-game button#submit-guess:active {
+             transform: scale(0.98); /* Slight press effect */
+         }
+
+
+        #guess-number-game #guess-status {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+         #guess-number-game #guesses-left {
+            font-size: 1.1em;
+            color: #e94560; /* Accent color */
+            margin-bottom: 30px; /* Space before back button */
+         }
+
+
+        /* Rock Paper Scissors Game Specific Styles */
+        #rock-paper-scissors-game {
+            padding: 30px;
+            justify-content: center; /* Center content vertically */
+        }
+
+        #rock-paper-scissors-game h3 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #e94560; /* Accent color */
+        }
+
+        #rock-paper-scissors-game .choices {
+            display: flex;
+            justify-content: center;
+            gap: 20px; /* Space between buttons */
+            margin-bottom: 30px;
+        }
+
+        #rock-paper-scissors-game .rps-button {
+            padding: 15px 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background-color: #e94560; /* Accent color */
+            color: white;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+
+        #rock-paper-scissors-game .rps-button:hover {
+             background-color: #ba364d; /* Darker accent on hover */
+        }
+
+         #rock-paper-scissors-game .rps-button:active {
+             transform: scale(0.98); /* Slight press effect */
+         }
+
+         #rock-paper-scissors-game .rps-button:disabled {
+             opacity: 0.6;
+             cursor: not-allowed;
+         }
+
+
+        #rock-paper-scissors-game #user-choice,
+        #rock-paper-scissors-game #computer-choice {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        #rock-paper-scissors-game #game-result {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 30px; /* Space before back button */
+        }
+
+
+        /* Back button styling */
+        .back-button {
+            margin-top: auto; /* Push the back button to the bottom */
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #6c757d; /* Grey color for back button */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+
+        .back-button:hover {
+            background-color: #5a6268; /* Darker grey on hover */
+        }
+
+        .back-button:active {
+             transform: scale(0.98); /* Slight press effect */
+        }
+
+
+         /* Responsive adjustments */
+        @media (max-width: 600px) {
+            #loading-screen h1 {
+                font-size: 2em;
+            }
+
+            .loading-logo {
+                font-size: 1.2em;
+            }
+
+            #game-menu {
+                padding: 20px;
+            }
+
+            #game-menu h2 {
+                font-size: 1.8em;
+                margin-bottom: 20px;
+            }
+
+            #game-menu button {
+                padding: 15px;
+                font-size: 1em;
+            }
+
+            .board {
+                grid-template-columns: repeat(3, 60px); /* Smaller cells */
+                grid-gap: 5px;
+            }
+
+            .cell {
+                width: 60px;
+                height: 60px;
+                font-size: 2em;
+            }
+
+            #game-status, #maze-status, #guess-number-game #guess-status, #guess-number-game #guesses-left { /* Include guess number elements */
+                 font-size: 1.2em;
+            }
+
+            #reset-button, .back-button, #guess-number-game button#submit-guess { /* Include guess number submit button */
+                padding: 12px 20px;
+                font-size: 1em;
+            }
+
+             #guess-number-game h3, #rock-paper-scissors-game h3 { /* Include RPS heading */
+                 font-size: 1.5em;
+             }
+
+             #guess-number-game input[type="number"] {
+                 font-size: 1em;
+                 padding: 8px;
+             }
+
+             #rock-paper-scissors-game .choices { /* Adjust RPS choices layout */
+                 gap: 10px;
+             }
+
+             #rock-paper-scissors-game .rps-button { /* Adjust RPS button size */
+                 padding: 10px 15px;
+                 font-size: 1em;
+             }
+
+             #rock-paper-scissors-game #user-choice,
+             #rock-paper-scissors-game #computer-choice,
+             #rock-paper-scissors-game #game-result { /* Adjust RPS text size */
+                 font-size: 1.1em;
+             }
+        }
+
+
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <h1>Welcome to the gamehub</h1>
+        <div class="loading-logo">Loading...</div>
+    </div>
+
+    <div id="game-menu">
+        <h2>Game Menu</h2>
+        <button id="tic-tac-toe-button">Tic Tac Toe</button>
+        <button id="maze-button">Simple Maze</button>
+        <button id="guess-number-button">Guess the Number</button>
+        <button id="rock-paper-scissors-button">Rock Paper Scissors</button>
+    </div>
+
+    <div id="game-area">
+        <div id="tic-tac-toe-game">
+            <div id="game-status"></div>
+            <div class="board">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+            </div>
+            <button id="reset-button">Reset Game</button>
+            <button id="tic-tac-toe-back-button" class="back-button">Back to Menu</button> <!-- Back button -->
+        </div>
+
+        <div id="maze-game">
+             <div id="maze-container" class="maze-container">
+                <!-- Maze will be rendered here -->
+            </div>
+             <div id="maze-status"></div>
+             <button id="maze-back-button" class="back-button">Back to Menu</button> <!-- Back button -->
+        </div>
+
+        <div id="guess-number-game" style="display: none;">
+             <!-- Guess the Number game elements -->
+             <h3>Guess the Number!</h3>
+             <p>Guess a number between <span id="min-number">1</span> and <span id="max-number">100</span>.</p>
+             <input type="number" id="guess-input" placeholder="Enter your guess">
+             <button id="submit-guess">Submit Guess</button>
+             <div id="guess-status"></div>
+             <div id="guesses-left">Guesses left: 10</div>
+             <button id="guess-number-back-button" class="back-button">Back to Menu</button>
+        </div>
+
+        <div id="rock-paper-scissors-game" style="display: none;">
+            <!-- Rock Paper Scissors game elements -->
+            <h3>Rock Paper Scissors</h3>
+            <div class="choices">
+                <button class="rps-button" data-choice="rock">Rock</button>
+                <button class="rps-button" data-choice="paper">Paper</button>
+                <button class="rps-button" data-choice="scissors">Scissors</button>
+            </div>
+            <div id="user-choice"></div>
+            <div id="computer-choice"></div>
+            <div id="game-result"></div>
+            <button id="rock-paper-scissors-back-button" class="back-button">Back to Menu</button>
+        </div>
+
+    </div>
+
+    <script>
+        const loadingScreen = document.getElementById('loading-screen');
+        const gameMenu = document.getElementById('game-menu');
+        const gameArea = document.getElementById('game-area');
+        const ticTacToeGame = document.getElementById('tic-tac-toe-game');
+        const ticTacToeButton = document.getElementById('tic-tac-toe-button');
+        const mazeGame = document.getElementById('maze-game');
+        const mazeButton = document.getElementById('maze-button');
+        const guessNumberGame = document.getElementById('guess-number-game');
+        const guessNumberButton = document.getElementById('guess-number-button');
+        const rockPaperScissorsGame = document.getElementById('rock-paper-scissors-game');
+        const rockPaperScissorsButton = document.getElementById('rock-paper-scissors-button');
+
+
+        // Get back buttons
+        const ticTacToeBackButton = document.getElementById('tic-tac-toe-back-button');
+        const mazeBackButton = document.getElementById('maze-back-button');
+        const guessNumberBackButton = document.getElementById('guess-number-back-button');
+        const rockPaperScissorsBackButton = document.getElementById('rock-paper-scissors-back-button');
+
+
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+            gameMenu.style.display = 'block';
+        }, 2000);
+
+        function showGameMenu() {
+            gameArea.style.display = 'none';
+            ticTacToeGame.style.display = 'none';
+            mazeGame.style.display = 'none';
+            guessNumberGame.style.display = 'none';
+            rockPaperScissorsGame.style.display = 'none';
+
+            gameMenu.style.display = 'block';
+        }
+
+
+        ticTacToeButton.addEventListener('click', () => {
+            gameMenu.style.display = 'none';
+            gameArea.style.display = 'block';
+            ticTacToeGame.style.display = 'block';
+            mazeGame.style.display = 'none';
+            guessNumberGame.style.display = 'none';
+            rockPaperScissorsGame.style.display = 'none';
+            if (typeof initializeTicTacToe === 'function') {
+                initializeTicTacToe();
+            }
+        });
+
+        mazeButton.addEventListener('click', () => {
+            gameMenu.style.display = 'none';
+            gameArea.style.display = 'block';
+            ticTacToeGame.style.display = 'none';
+            mazeGame.style.display = 'block';
+            guessNumberGame.style.display = 'none';
+            rockPaperScissorsGame.style.display = 'none';
+            if (typeof initializeMazeGame === 'function') {
+                 initializeMazeGame();
+            }
+        });
+
+         if (guessNumberButton) {
+            guessNumberButton.addEventListener('click', () => {
+                gameMenu.style.display = 'none';
+                gameArea.style.display = 'block';
+                ticTacToeGame.style.display = 'none';
+                mazeGame.style.display = 'none';
+                rockPaperScissorsGame.style.display = 'none';
+                guessNumberGame.style.display = 'block';
+                 if (typeof initializeGuessNumberGame === 'function') {
+                     initializeGuessNumberGame();
+                }
+            });
+        }
+
+         if (rockPaperScissorsButton) {
+            rockPaperScissorsButton.addEventListener('click', () => {
+                gameMenu.style.display = 'none';
+                gameArea.style.display = 'block';
+                ticTacToeGame.style.display = 'none';
+                mazeGame.style.display = 'none';
+                guessNumberGame.style.display = 'none';
+                rockPaperScissorsGame.style.display = 'block';
+                 if (typeof initializeRockPaperScissorsGame === 'function') {
+                     initializeRockPaperScissorsGame();
+                }
+            });
+        }
+
+
+        // Add event listeners for back buttons
+        if (ticTacToeBackButton) {
+             ticTacToeBackButton.addEventListener('click', showGameMenu);
+        }
+        if (mazeBackButton) {
+            mazeBackButton.addEventListener('click', showGameMenu);
+        }
+         if (guessNumberBackButton) {
+            guessNumberBackButton.addEventListener('click', showGameMenu);
+        }
+         if (rockPaperScissorsBackButton) {
+            rockPaperScissorsBackButton.addEventListener('click', showGameMenu);
+        }
+
+
+    </script>
+    <script src="tic_tac_toe.js"></script>
+    <script src="maze_game.js"></script>
+    <script src="guess_number.js"></script>
+    <script src="rock_paper_scissors.js"></script>
+</body>
+</html>
